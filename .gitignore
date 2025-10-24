@@ -1,0 +1,39 @@
+# -------------------
+# Node.js / React
+# -------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+/dist
+/build
+.env
+.vscode/
+
+# -------------------
+# Python
+# -------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+env/
+venv/
+ENV/
+.venv/
+*.sqlite3
+*.egg-info/
+*.eggs/
+*.coverage
+*.pytest_cache/
+.coverage.*
+.pytest_cache/
+*.log
+
+# -------------------
+# System files
+# -------------------
+.DS_Store
+Thumbs.db
