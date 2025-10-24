@@ -1,51 +1,50 @@
-from flask import Blueprint, request, redirect, url_for, render_template
+from flask import Blueprint, request, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from extensions import db, bcrypt
 from models import User
 
 auth = Blueprint("auth", __name__)
 
-@auth.route('/register', methods=['GET', 'POST'])
+@auth.route('/register', methods=['POST'])
 def register():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
+    print("worked")
+    data = request.get_json()
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
 
-        existing_user = User.query.filter((User.email == email) | (User.username == username)).first()
-        if existing_user:
-            return redirect(url_for('auth.register'))
+    if not username or not email or not password:
+        return jsonify({"error": "All fields are required"}), 400
 
-        hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
-        new_user = User(username=username, email=email, password=hashed_pw)
+    existing_user = User.query.filter((User.email == email) | (User.username == username)).first()
+    if existing_user:
+        return jsonify({"error": "User already exists"}), 409
 
-        db.session.add(new_user)
-        db.session.commit()
+    hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
+    new_user = User(username=username, email=email, password=hashed_pw)
+    
+    db.session.add(new_user)
+    db.session.commit()
 
-        return redirect(url_for('auth.login'))
+    return jsonify({"message": "User registered successfully"}), 201
 
-    return render_template('register.html')
-
-
-@auth.route('/login', methods=['GET', 'POST'])
+@auth.route('/login', methods=['POST'])
 def login():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
 
-        user = User.query.filter_by(email=email).first()
+    if not email or not password:
+        return jsonify({"error": "Email and password required"}), 400
 
-        if user and bcrypt.check_password_hash(user.password, password):
-            login_user(user)
-            return redirect(url_for('dashboard'))
-        else:
-            #put code for bad stuff
-            pass
-    return render_template('login.html')
+    user = User.query.filter_by(email=email).first()
+    if user and bcrypt.check_password_hash(user.password, password):
+        login_user(user)
+        return jsonify({"message": "Login successful"}), 200
+    return jsonify({"error": "Invalid credentials"}), 401
 
-
-@auth.route('/logout')
+@auth.route('/logout', methods=['POST'])
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('auth.login'))
+    return jsonify({"message": "Logged out successfully"}), 200
